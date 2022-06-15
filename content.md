@@ -46,7 +46,7 @@ type Person = {
 }
 ```
 
-Dies ist ein `record` mit einem `FirstName`, einem `LastName` und einem `UserName` (Anmerkung: Seit C# 9 gibt es das Konzept von `record`s auch in C#. Und seit C# 10 gibt es auch `record struct`, was dem F# `record` Konstrukt recht nahe kommt). 
+Dies ist ein `record` mit einem `FirstName`, und einem `LastName` (Anmerkung: Seit C# 9 gibt es das Konzept von `record`s auch in C#. Und seit C# 10 gibt es auch `record struct`, was dem F# `record` Konstrukt recht nahe kommt). 
 
 Um eine Instanz dieses Typs zu erzeugen, muss jedem Feld einen Wert zugewiesen werden:
 
