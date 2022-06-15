@@ -6,12 +6,16 @@ type LastName = LastName of string
 
 type UserName = private UserName of string
 module UserName =
-    let isValid s = not (String.IsNullOrEmpty(s)) && s.Length < 50
+    let isValid s = not (String.IsNullOrEmpty(s)) && s.Length <= 10
+    
+    // smart constructor
     let create (str: string) =
         if isValid str then
-            Some (UserName str)
+            Ok (UserName str)
         else
-            None
+            Error $"UserName is invalid: '{str}'."
+    
+    // helper function to extract the string
     let value (UserName str) = str
 
 type Person = {
@@ -20,30 +24,26 @@ type Person = {
     UserName: UserName
 }
 
-let fn = ""
-let ln = ""
-let un = ""
-
 let tryCreatePerson fn ln un =
-    let maybeUserName un = 
-        match UserName.create un with
-        | Some validNameUserName -> Some validNameUserName
-        | None -> None
 
     let maybeFirstName fn =
-        match fn with
-        | Some validNameFirstName -> Some validNameFirstName
-        | None -> None
+        if String.IsNullOrEmpty(fn) then
+            None
+        else
+            Some (FirstName fn)
         
     let maybeLastName ln =
-        match ln with
-        | Some validNameLastName -> Some validNameLastName
-        | None -> None
+        if String.IsNullOrEmpty(ln) then
+            None
+        else
+            Some (LastName ln)
         
-    match maybeUserName un with
-    | Some validNameUserName ->
-        {  }
-
-let maybeUser1 = tryCreatePerson "Lisa" "Simpson" "lisa rocks"
-let maybeUser2 = tryCreatePerson "Homer" "Simpson" ""
-let maybeUser3 = tryCreatePerson "Marge" "Simpson" "lisa rocks"
+    match UserName.create un with
+    | Error e ->
+        Error $"Problem creating Person. {e}"
+    | Ok validNameUserName ->
+        Ok  {
+                FirstName = maybeFirstName fn
+                LastName = maybeLastName ln
+                UserName = validNameUserName
+            }
