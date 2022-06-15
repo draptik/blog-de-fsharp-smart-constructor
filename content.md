@@ -256,4 +256,7 @@ Um sicherzustellen, dass vermeintlich einfache Typen (wie `string`) im Domänenk
 
 Das "Smart Constructor" Pattern erleichtert die Validierung einfacher Typen, indem das Erstellen ungültiger Typen unterbunden wird (Stichwort: ["Prevent inpossible states (oder wie das heisst TODO Better link"](https://sporto.github.io/elm-patterns/basic/impossible-states.html)).))
 
+Ich möchte hier auch hervorheben, dass das obige Beispiel sehr kompakt und einfach ist.
+Es ist überschaubarer/wartbarer ("it fits in your head"), als das Gegenstück in C#.
+
 Dies ist eine freie Übersetzung eines privaten Blog-Posts von mir: https://draptik.github.io/posts/2020/02/10/fsharp-smart-constructor/
