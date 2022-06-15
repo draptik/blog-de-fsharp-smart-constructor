@@ -13,9 +13,9 @@ module UserName =
     // smart ctor
     let create (str: string) =
         if isValid str then
-            Some (UserName str)
+            Ok (UserName str)
         else
-            None
+            Error "Invalid user name"
 
     // helper function extracting value
     let value (UserName s) = s
@@ -24,21 +24,20 @@ module UserName =
 Anwendung:
 
 ```fsharp
-let workingWithSmartCtor name =
-    let maybeValidUserName = UserName.create name
-    match maybeValidUserName with
-    | Some validName -> validName |> UserName.value
-    | None -> "invalid UserName"
+let maybeValidUserName name = 
+    match UserName.create name with
+    | Ok validName -> validName |> UserName.value
+    | Error e -> e
 
-workingWithSmartCtor ""     // -> "invalid UserName"
-workingWithSmartCtor "lisa" // -> "lisa"
+maybeValidUserName ""     // -> "Invalid user name"
+maybeValidUserName "lisa" // -> "lisa"
 ```
 
-## Artikel
+## Einleitung
 
-In diesem Artikel moechte ich zeigen, wie man F# `record`s mit eingebauter Validierung erzeugt.
+In diesem Artikel möchte ich zeigen, wie man in F# Typen mit eingebauter Validierung erzeugt.
 
-Beginnen wir mit einem einfachem `Person` Typ:
+Beginnen wir mit einem einfachen `Person` Typ:
 
 ```fsharp
 type Person = {
@@ -47,7 +46,9 @@ type Person = {
 }
 ```
 
-Dies ist ein `record` mit einem `FirstName`, einem `LastName` und einem `UserName` (Anmerkung: Ab C# Version 9 (TODO: Check Version number) gibt es das Konzept von `record`s auch in C#). Um eine Instanz dieses Typs zu erzeugen:
+Dies ist ein `record` mit einem `FirstName`, einem `LastName` und einem `UserName` (Anmerkung: Seit C# 9 gibt es das Konzept von `record`s auch in C#. Und seit C# 10 gibt es auch `record struct`, was dem F# `record` Konstrukt recht nahe kommt). 
+
+Um eine Instanz dieses Typs zu erzeugen, muss jedem Feld einen Wert zugewiesen werden:
 
 ```fsharp
 let homer = {
@@ -56,26 +57,30 @@ let homer = {
 }
 ```
 
-Moechte man nun eine Formatierungfunktion anbieten, die mit dem Vor- und Nachnamen arbeitet, koennte eine einfache Implementierung folgendermassen aussehen:
+Möchte man nun eine Formatierungsfunktion anbieten, die mit dem Vor- und Nachnamen arbeitet, könnte eine einfache Implementierung folgendermaßen aussehen:
 
-```fshapr
+```fsharp
+// string -> string -> string
 let formatName firstName lastName = $"{lastName}, {firstName}"
 ```
 
-Da es sich beim Vor- und Nachnamen um einen `string` handelt, besteht eine gewisse Verwechselungsgefahr:
+Hinweis: Der Kommentar `// string -> string -> string` beschreibt die Typsignatur der darunterstehenden Methode. Da F# eine bessere Typinferenz als C# hat, muss man meist die Typen nicht explizit angeben. Für diesen Artikel habe ich an manchen Stellen die Signatur als Kommentar hinzugefügt um Unklarheiten zu vermeiden. Der letzte Wert in der Signatur ist der Rückgabewert der Funktion. Alle anderen Werte sind Parameter der Funktion. In C# wäre die entsprechende Signatur `Func<string, string, string>`.
+
+Da es sich beim Vor- und Nachnamen um einen `string` handelt, besteht eine gewisse Verwechslungsgefahr:
 
 ```fsharp
+// Achtung: Vor- und Nachname sind vertauscht:
 let formattedName = formatName "Simpson" "Homer"
 ```
 
-Dieses Problem wird auch als "Primitive Obsession" bezeichnet: Anstatt das vorhandene Typ-System zu nutzen, wird ein `string` verwendet. Abhilfe schafft die Verwendung dedizierter Typen fuer Vor- und Nachnamen:
+Dieses Problem wird auch als ["Primitive Obsession"](https://wiki.c2.com/?PrimitiveObsession) Antipattern bezeichnet: Anstatt das vorhandene Typ-System zu nutzen, wird ein `string` verwendet. Abhilfe schafft die Verwendung dedizierter Typen für Vor- und Nachname:
 
 ```fsharp
 type FirstName = FirstName of string
 type LastName = LastName of string
 ```
 
-Im Gegensatz zum `Person`-Typ handelt es sich hier um sogenannte Single-Case Discriminated Unions.
+Im Gegensatz zum `Person`-Typ handelt es sich hier um sogenannte [Single-Case Discriminated Unions](https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/).
 
 Der `Person`-Typ kann nun diese dedizierten Typen verwenden:
 
@@ -95,17 +100,19 @@ let bart = {
 }
 ```
 
-Der `formatName`-Aufruf ist kann nun ohne Verwechselungsgefahr der Parameterreihenfolge erfolgen, da eine falsche Reihenfolge vom Compiler unterbunden wird:
+Der `formatName`-Aufruf kann nun ohne Verwechslungsgefahr der Parameterreihenfolge erfolgen, da eine falsche Reihenfolge vom Compiler unterbunden wird:
 
 ```fsharp
-let formattedName1 = formatName bart.LastName bart.FirstName
-let formattedName2 = formatName (FirstName "Bart") (LastName "Simpson")
-let formattedName3 = formatName (LastName "Simpson") (FirstName "Bart") // kompiliet nicht
+let formattedName1 = formatName bart.LastName bart.FirstName // -> "Simpson, Bart"
+let formattedName2 = formatName (FirstName "Bart") (LastName "Simpson") // -> "Simpson, Bart"
+let formattedName3 = formatName (LastName "Simpson") (FirstName "Bart") // 😡 kompiliert nicht
 ```
 
-Szenenwechsel: Aus unerklaerlichen Gründen aendern sich die Anforderungen fuer den `Person`-Typ. Die Angabe eines Vor- und Nachnamen sind nun optional, dafuer muss ein `UserName` vorhanden sein. Der `UserName` hat zusaetzlich die Anforderung, dass er (a) nicht leer sein darf, und (b) nicht mehr als 10 Zeichen lang sein darf.
+## Neue Anforderungen
 
-Die Umsetzung von optionalen Eigenschaften `record`s ist dank des F# `option`-Typs einfach umzusetzen:
+Szenenwechsel: Aus unerklärlichen Gründen ändern sich die Anforderungen für den `Person`-Typ. Die Angabe eines Vor- und Nachnamens ist nun optional, dafür muss ein `UserName` vorhanden sein. Der `UserName` hat zusätzlich die Anforderung, dass er (a) nicht leer sein darf und (b) nicht mehr als 10 Zeichen lang sein darf.
+
+Die Umsetzung von optionalen Eigenschaften in `record`s ist dank des F# `option`-Typs einfach umzusetzen:
 
 ```fsharp
 type Person = {
@@ -113,6 +120,8 @@ type Person = {
     LastName: LastName option
 }
 ```
+
+Hinweis: Auch wenn der `option`-Typ vielleicht auf den ersten Blick wie ein `nullable`-Typ in C# aussieht (`FirstName?`): Nein, das ist nicht das Gleiche. `option`s können miteinander kombiniert werden, sind also um einiges mächtiger als C# `nullable`s.
 
 Eine Person kann also auch ohne Vor- und/oder Nachnamen erzeugt werden:
 
@@ -123,7 +132,7 @@ let marge = {
 }
 ```
 
-Doch wie handhaben wir einen `UserName`, mit Validierung?
+Doch wie handhabt man den `UserName` mit Validierung?
 
 ```fsharp
 type Person = {
@@ -133,57 +142,77 @@ type Person = {
 }
 ```
 
+## Smart Constructor to the rescue
+
 Hier kommt das "Smart Constructor" Pattern ins Spiel:
 
 ```fsharp
+// `UserName` is private
 type UserName = private UserName of string
 
 module UserName =
-    let isValid s = not (String.IsNullOrEmpty(s)) && s.Length < 50
+    let isValid s = not (String.IsNullOrEmpty(s)) && s.Length < 10
 
     // smart constructor
+    // string -> Result<UserName, string>
     let create (str: string) =
         if isValid str then
-            Some (UserName str)
+            Ok (UserName str)
         else
-            None
+            Error $"invalid UserName '{str}'"
 
     // helper function to extract the string
+    // UserName -> string
     let value (UserName str) = str
 ```
 
-Der `UserName`-Typ wird mit dem `private` Attribut versehen. Somit kann der `UserName` nur innerhalb des folgenden Moduls erzeugt werden.
+Der `UserName`-Typ wird mit dem `private` Attribut versehen. Somit kann der `UserName` nur innerhalb des aktuellen Scopes erzeugt werden.
 
-Im naechsten Schritt wird ein gleichnamiges Modul erzeugt, welches eine `create`-Funktion enthaelt. Innerhalb dieser Funktion wird die Eingabe validiert (`isValid`). Der Rueckgabewert der `create`-Funktion ist ein `option`-Typ, welcher entweder einen `Some UserName` oder `None` enthaelt.
+Im nächsten Schritt wird ein gleichnamiges Modul erzeugt, welches eine `create`-Funktion enthält. Innerhalb dieser Funktion wird die Eingabe validiert (`isValid`). Der Rückgabewert der `create`-Funktion ist ein `Result`-Typ, welcher entweder einen `Ok UserName` oder `Error msg` enthält.
 
 Hier ein Beispiel, wie die `create`-Funktion aufgerufen wird:
 
 ```fsharp
 let maybeUserName = 
     match UserName.create someString with
-    | Some validName -> validName |> UserName.value
-    | None -> "invalid UserName"
+    | Ok validName -> validName |> UserName.value
+    | Error e -> e
 
 maybeUserName "lisa" // -> "lisa"
-maybeUserName ""     // -> "invalid UserName"
+maybeUserName ""     // -> "invalid UserName ''"
 ```
 
-Wichtig: Die `create`-Funktion muss nicht zwingend einen `option`-Typ zurueckgeben, wie in diesem Beispiel. Wenn die Eingabe nicht gültig ist, kann die `create`-Funktion auch eine Exception werfen, oder etwas anderes machen! Es geht lediglich darum, dass die Eingabe validiert wird: Wie mit dem Ergebnis der Validierung umgegangen wird, kann man selbst entscheiden.
+Wichtig: Die `create`-Funktion muss nicht zwingend einen `Result`-Typ zurückgeben wie in diesem Beispiel. Wenn die Eingabe nicht gültig ist, kann die `create`-Funktion auch ein `option`-Typ zurückgeben, eine Exception werfen oder etwas anderes machen! 
 
-Das Erstellen eines `Person`-Typs koennte z.B. folgendermassen aussehen:
+Es geht darum, dass es nie einen ungültigen `UserName` geben kann.
+
+Wie mit dem Ergebnis der Validierung umgegangen wird, kann man selbst entscheiden.
+
+Ob man nun einen weiteren Smart Constructor für den `Person`-Typ verwendet oder eine andere Strategie, wie beispielsweise das "Applicative Validation"-Pattern, steht einem frei.
+
+## Beispiel
+
+Das Erstellen eines `Person`-Typs mittels einer `tryCreatePerson` Funktion könnte z. B. folgendermaßen aussehen:
 
 ```fsharp
+module Demo.Domain
+open System
+
 type FirstName = FirstName of string
 type LastName = LastName of string
 
 type UserName = private UserName of string
 module UserName =
-    let isValid s = not (String.IsNullOrEmpty(s)) && s.Length < 50
+    let isValid s = not (String.IsNullOrEmpty(s)) && s.Length <= 10
+    
+    // smart constructor
     let create (str: string) =
         if isValid str then
-            Some (UserName str)
+            Ok (UserName str)
         else
-            None
+            Error $"UserName is invalid: '{str}'."
+    
+    // helper function to extract the string
     let value (UserName str) = str
 
 type Person = {
@@ -192,17 +221,33 @@ type Person = {
     UserName: UserName
 }
 
-let fn = ""
-let ln = ""
-let un = ""
-
 let tryCreatePerson fn ln un =
-    let maybeUserName = 
-        match UserName.create un with
-        | Some validNameUserName -> Some { FirstName = FirstName fn; LastName = LastName ln; UserName = validNameUserName }
-        | None -> None
 
-let maybeUser1 = tryCreatePerson "Lisa" "Simpson" "lisa rocks"
-let maybeUser2 = tryCreatePerson "Homer" "Simpson" ""
-let maybeUser3 = tryCreatePerson "Marge" "Simpson" "lisa rocks"
+    let maybeFirstName fn =
+        if String.IsNullOrEmpty(fn) then
+            None
+        else
+            Some (FirstName fn)
+        
+    let maybeLastName ln =
+        if String.IsNullOrEmpty(ln) then
+            None
+        else
+            Some (LastName ln)
+        
+    match UserName.create un with
+    | Error e ->
+        Error e
+    | Ok validNameUserName ->
+        Ok  {
+                FirstName = maybeFirstName fn
+                LastName = maybeLastName ln
+                UserName = validNameUserName
+            }
 ```
+
+## Fazit
+
+Um sicherzustellen, dass vermeintlich einfache Typen (wie `string`) im Domänenkontext Sinn ergeben ("Optionaler Vorname", "UserName mit Regeln"), bietet es sich an, dedizierte Typen zu erstellen. 
+
+Das "Smart Constructor" Pattern erleichtert die Validierung einfacher Typen, indem das Erstellen ungültiger Typen unterbunden wird (Stichwort: ["Prevent inpossible states (oder wie das heisst TODO Better link"](https://sporto.github.io/elm-patterns/basic/impossible-states.html)).))
