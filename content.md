@@ -64,7 +64,7 @@ Möchte man nun eine Formatierungsfunktion anbieten, die mit dem Vor- und Nachna
 let formatName firstName lastName = $"{lastName}, {firstName}"
 ```
 
-Hinweis: Der Kommentar `// string -> string -> string` beschreibt die Typsignatur der darunterstehenden Methode. Da F# eine bessere Typinferenz als C# hat, muss man meist die Typen nicht explizit angeben. Für diesen Artikel habe ich an manchen Stellen die Signatur als Kommentar hinzugefügt um Unklarheiten zu vermeiden. Der letzte Wert in der Signatur ist der Rückgabewert der Funktion. Alle anderen Werte sind Parameter der Funktion. In C# wäre die entsprechende Signatur `Func<string, string, string>`.
+Hinweis: Der Kommentar `// string -> string -> string` beschreibt die Typsignatur der darunterstehenden Funktion. Da F# eine bessere Typinferenz als C# hat, muss man meist die Typen nicht explizit angeben. Für diesen Artikel habe ich an manchen Stellen die Signatur als Kommentar hinzugefügt um Unklarheiten zu vermeiden. Der letzte Wert in der Signatur ist der Rückgabewert der Funktion. Alle anderen Werte sind Parameter der Funktion. In C# wäre die entsprechende Signatur `Func<string, string, string>`.
 
 Da es sich beim Vor- und Nachnamen um einen `string` handelt, besteht eine gewisse Verwechslungsgefahr:
 
