@@ -48,7 +48,7 @@ type Person = {
 
 Dies ist ein `record` mit einem `FirstName`, und einem `LastName` (Anmerkung: Seit C# 9 gibt es das Konzept von `record`s auch in C#. Und seit C# 10 gibt es auch `record struct`, was dem F# `record` Konstrukt recht nahe kommt). 
 
-Um eine Instanz dieses Typs zu erzeugen, muss jedem Feld einen Wert zugewiesen werden:
+Um eine Instanz dieses Typs zu erzeugen, muss jedem Feld ein Wert zugewiesen werden:
 
 ```fsharp
 let homer = {
