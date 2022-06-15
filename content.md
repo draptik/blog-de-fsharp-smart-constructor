@@ -221,20 +221,24 @@ type Person = {
     UserName: UserName
 }
 
+// string -> string -> string -> Result<Person, string>
 let tryCreatePerson fn ln un =
 
+    // string -> Option<FirstName>    
     let maybeFirstName fn =
         if String.IsNullOrEmpty(fn) then
             None
         else
             Some (FirstName fn)
         
+    // string -> Option<LastName>
     let maybeLastName ln =
         if String.IsNullOrEmpty(ln) then
             None
         else
             Some (LastName ln)
-        
+
+    // string -> Result<Person, string>        
     match UserName.create un with
     | Error e ->
         Error e
