@@ -251,3 +251,5 @@ let tryCreatePerson fn ln un =
 Um sicherzustellen, dass vermeintlich einfache Typen (wie `string`) im Domänenkontext Sinn ergeben ("Optionaler Vorname", "UserName mit Regeln"), bietet es sich an, dedizierte Typen zu erstellen. 
 
 Das "Smart Constructor" Pattern erleichtert die Validierung einfacher Typen, indem das Erstellen ungültiger Typen unterbunden wird (Stichwort: ["Prevent inpossible states (oder wie das heisst TODO Better link"](https://sporto.github.io/elm-patterns/basic/impossible-states.html)).))
+
+Dies ist eine freie Übersetzung eines privaten Blog-Posts von mir: https://draptik.github.io/posts/2020/02/10/fsharp-smart-constructor/
