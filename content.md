@@ -173,7 +173,7 @@ Im nächsten Schritt wird ein gleichnamiges Modul erzeugt, welches eine `create`
 Hier ein Beispiel, wie die `create`-Funktion aufgerufen wird:
 
 ```fsharp
-let maybeUserName = 
+let maybeUserName someString = 
     match UserName.create someString with
     | Ok validName -> validName |> UserName.value
     | Error e -> e
