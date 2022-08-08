@@ -1,6 +1,10 @@
 # F# Smart Constructor
 
+<!-- [Sebastian] An welche Leserschaft richtet sich der Artikel? Der Artiekl setzt zwar nicht zwingend F#-Kenntnisse voraus, geht allerdings auf einige F#-Punkte nur kurz oder gar nicht ein. Ich vermute, grundlegende F#-Kenntnisse sollte der Leser mitbringen, richtig?  -->
+
 Das "F# Smart Constructor" Pattern ermöglicht die Erzeugung von validierten F# Typen.
+
+<!-- [Sebastian] Was ist ist Motivation, hier F# zu verwenden? Lässt sich mit F# das Pattern besonders gut zeigen? Oder ist es in F# besonders wichtig, dieses Pattern zu verwenden? Oder lässt sich die Validierung - anders als in C# - in F# besonders gut umsetzen? -->
 
 ## TL;DR
 
@@ -50,6 +54,8 @@ Dies ist ein `record` mit einem `FirstName`, und einem `LastName` (Anmerkung: Se
 
 Um eine Instanz dieses Typs zu erzeugen, muss jedem Feld ein Wert zugewiesen werden:
 
+<!-- [Sebastian] Woran kann man erkennen, dass dies hier eine Instanz des Typs `Person` ist? Für mich sieht das aus wie ein typenloser Adhoc-Record. -->
+
 ```fsharp
 let homer = {
     FirstName = "Homer"
@@ -64,7 +70,9 @@ Möchte man nun eine Formatierungsfunktion anbieten, die mit dem Vor- und Nachna
 let formatName firstName lastName = $"{lastName}, {firstName}"
 ```
 
-Hinweis: Der Kommentar `// string -> string -> string` beschreibt die Typsignatur der darunterstehenden Funktion. Da F# eine bessere Typinferenz als C# hat, muss man meist die Typen nicht explizit angeben. Für diesen Artikel habe ich an manchen Stellen die Signatur als Kommentar hinzugefügt um Unklarheiten zu vermeiden. Der letzte Wert in der Signatur ist der Rückgabewert der Funktion. Alle anderen Werte sind Parameter der Funktion. In C# wäre die entsprechende Signatur `Func<string, string, string>`.
+<!-- [Sebastian] Guter Hinweis, denn hier ist für Non F# Reader eine kleine Erläuterung der sonderbar aussehenden Syntax nötig (ohne auch Currying eingehen zu müssen). Für einen Python-Leser zum Beispiel sieht das oben aus wie eine Zuweisung an 3 Variablen. -->
+
+Hinweis: Der Kommentar `// string -> string -> string` beschreibt die Typsignatur der darunterstehenden Funktion. Da F# eine bessere Typinferenz als C# hat, muss man meist die Typen nicht explizit angeben. Für diesen Artikel habe ich an manchen Stellen die Signatur als Kommentar hinzugefügt um Unklarheiten zu vermeiden. Der letzte Wert in der Signatur ist der Rückgabewert der Funktion. <!-- [Sebastian] Du meinst hier nicht den Wert, sondern den Typ in der Signatur, richtig? --> Alle anderen Werte sind Parameter der Funktion. <!-- [Sebastian] Das könnte man jetzt so verstehen, als wäre `lastName` der Rückgabewert, was er ja nicht ist, richtig? Der Rückgabewert der Funktion ist der Wert des letztens Ausdrucks - wobei es hier in der Funktion nur einen Ausdruck gibt. --> In C# wäre die entsprechende Signatur `Func<string, string, string>`.
 
 Da es sich beim Vor- und Nachnamen um einen `string` handelt, besteht eine gewisse Verwechslungsgefahr:
 
@@ -73,7 +81,16 @@ Da es sich beim Vor- und Nachnamen um einen `string` handelt, besteht eine gewis
 let formattedName = formatName "Simpson" "Homer"
 ```
 
+<!-- [Sebastian] Kurzer Hinweis, dass das hier die Anwendung der zuvor definierten Funktion `formatName` ist? C#- und Python3-Leser vermissen hier die Klammern - Python2-Leser kommen damit zurecht. -->
+
 Dieses Problem wird auch als ["Primitive Obsession"](https://wiki.c2.com/?PrimitiveObsession) Antipattern bezeichnet: Anstatt das vorhandene Typ-System zu nutzen, wird ein `string` verwendet. Abhilfe schafft die Verwendung dedizierter Typen für Vor- und Nachname:
+
+<!-- [Sebastian] In Python gibt es dazu *Named Parameters*, hier zählt nur der Name des Parameters, nicht seine Position in der Liste der Argumente. In F#-Sytnax sähe das dann so aus:
+ 
+```fsharp
+let formattedName = formatName firstName="Simpson" lastName="Homer"
+``` 
+ -->
 
 ```fsharp
 type FirstName = FirstName of string
@@ -81,6 +98,8 @@ type LastName = LastName of string
 ```
 
 Im Gegensatz zum `Person`-Typ handelt es sich hier um sogenannte [Single-Case Discriminated Unions](https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/).
+
+<!-- [Sebastian] Was ist hier genau eine *Union*? Den Begriff *Wrapper* aus dem verlinkten Artikel verstehe ich noch. -->
 
 Der `Person`-Typ kann nun diese dedizierten Typen verwenden:
 
@@ -91,6 +110,8 @@ type Person = {
 }
 ```
 
+<!-- [Sebastian] Und hier fängt mein Hirn an auszusteigen, zumal der der Ansatz ja oben versprochen hat, die Verwechslungsgefahr zu reduzieren. Ich sehe jetzt zwei Felder und zwei Typen, wobei Feld und Typ den gleichen Namen tragen. :-o Ist das übliche F#-Praxis? In anderen Sprachen würde man statt `type FirstName` vermutlich eher `type FirstNameType` schreiben, um diese Verwechslung zu vermeiden? -->
+
 Um nun eine Instanz dieses Typs zu erzeugen, muss der jeweilige `string` erst in den entsprechenden `FirstName`- und `LastName`-Typen umgewandelt werden:
 
 ```fsharp
@@ -100,6 +121,8 @@ let bart = {
 }
 ```
 
+<!-- [Sebastian] Dieses Zeilen oben sehen für mich jetzt kurios aus, `FirstName` auf der linken und auf der rechten Seite des Zuweisungsoperators. -->
+
 Der `formatName`-Aufruf kann nun ohne Verwechslungsgefahr der Parameterreihenfolge erfolgen, da eine falsche Reihenfolge vom Compiler unterbunden wird:
 
 ```fsharp
@@ -107,6 +130,8 @@ let formattedName1 = formatName bart.LastName bart.FirstName // -> "Simpson, Bar
 let formattedName2 = formatName (FirstName "Bart") (LastName "Simpson") // -> "Simpson, Bart"
 let formattedName3 = formatName (LastName "Simpson") (FirstName "Bart") // 😡 kompiliert nicht
 ```
+
+<!-- [Sebastian] Frage am Rande: Ist das Problem nicht eher ein gestelltes? Sollte die Funktion `formatName` nicht besser den gesamten Record übergeben bekommen und sich selber herauspicken, was sie braucht? Nun, ich verstehe, es geht hier um Lehrzwecke... Die Funktion könnte ja auch zwei Records übergeben bekommen und dann hätten wir das gleichen Problem wieder. Was mich auf eine interessante Folgefrage bringt. Die beiden `string`-Parameter wrappen, verstehe ich, gekauft. Würde man auf ähnliche Weise zwei ganze `Person`-Records mappen und dafür dann zwei Wrapper-Typen `Husband` und `Wife` definieren? --->
 
 ## Neue Anforderungen
 
@@ -123,6 +148,8 @@ type Person = {
 
 Hinweis: Auch wenn der `option`-Typ vielleicht auf den ersten Blick wie ein `nullable`-Typ in C# aussieht (`FirstName?`): Nein, das ist nicht das Gleiche. `option`s können miteinander kombiniert werden, sind also um einiges mächtiger als C# `nullable`s.
 
+<!-- [Sebastian] Könntest Du auf den `option`-Type noch etwas genauer eingehen? Ich bin hier gestolpert: "Hm, das ist echt ein Typ?" `option` ist in F# wohl wirklich ein eigener Typ, dem ein Typ zugrundeliegt und Werte von eben diesem Typ kann so ein `option`-Wert annehmen oder eben keinen Wert.` Und ja, für mich klingt das sehr nach einem `nullable`-Typ in C#. Inwiefern `option` jetzt mächtiger ist, erschließt sich mir auf die Schnelle nicht - ist vermutlich hier aber auch nicht von Belang, oder? -->
+
 Eine Person kann also auch ohne Vor- und/oder Nachnamen erzeugt werden:
 
 ```fsharp
@@ -131,6 +158,8 @@ let marge = {
     LastName = None
 }
 ```
+
+<!-- [Sebastian] Könntest Du zu dem `Some` noch kurz was sagen? Vielleicht die Deklaration von `option` dazu schreiben, dann wären `None` und `Some` gleichermaßen kurz erläuert. Oder setzt Du diese Kenntnisse voraus? -->
 
 Doch wie handhabt man den `UserName` mit Validierung?
 
@@ -141,6 +170,10 @@ type Person = {
     UserName: UserName // ??
 }
 ```
+
+<!-- [Sebastian] Wie sieht die Deklartion des Tytps `UserName` aus? Das wäre hier insofern wichtig zu sehen, weil Du ja vermutlich darauf rauswillst, dass die beiden Constraints zum Typ `UserName` im `Person`-Records aufgehiben werden sollen, nicht aber im Typ `UserName`, richtig? Wobei sich die Frage stellt... warum eigentlich im `Person`-Record und nicht im `UserName`-Typ? :-o -->
+
+<!-- [Sebastian] Bis hierhin bin ich heute gekommen. To be continued... :-) -->
 
 ## Smart Constructor to the rescue
 
