@@ -2,7 +2,7 @@
 
 <!-- [Sebastian] An welche Leserschaft richtet sich der Artikel? Der Artiekl setzt zwar nicht zwingend F#-Kenntnisse voraus, geht allerdings auf einige F#-Punkte nur kurz oder gar nicht ein. Ich vermute, grundlegende F#-Kenntnisse sollte der Leser mitbringen, richtig?  -->
 <!-- [Patrick] TODO Ich sollte noch etwas schreiben, dass F#-Grundlagen erwartet werden... -->
-Das "F# Smart Constructor" Pattern ermöglicht die Erzeugung von validierten F# Typen.
+Das "Smart Constructor" Pattern ermöglicht die Erzeugung von validierten F# Typen.
 
 <!-- [Sebastian] Was ist ist Motivation, hier F# zu verwenden? Lässt sich mit F# das Pattern besonders gut zeigen? Oder ist es in F# besonders wichtig, dieses Pattern zu verwenden? Oder lässt sich die Validierung - anders als in C# - in F# besonders gut umsetzen? -->
 <!-- [Patrick] Es gibt keine Motivation. Ist halt ein Artikel ueber F#... ;-) -->
@@ -70,9 +70,9 @@ Möchte man nun eine Formatierungsfunktion anbieten, die mit dem Vor- und Nachna
 let formatName firstName lastName = $"{lastName}, {firstName}"
 ```
 
-Hinweis: Der Kommentar `// string -> string -> string` beschreibt die Typsignatur der darunterstehenden Funktion. Da F# eine bessere Typinferenz als C# hat, muss man meist die Typen nicht explizit angeben. Für diesen Artikel habe ich an manchen Stellen die Signatur als Kommentar hinzugefügt um Unklarheiten zu vermeiden. Der letzte Typ in der Signatur ist der Rückgabetyp der Funktion. Alle anderen Werte sind Parameter der Funktion. Der Rückgabewert der Funktion ist der Wert des letztens Ausdrucks - wobei es hier in der Funktion nur einen Ausdruck gibt. In C# wäre die entsprechende Signatur `Func<string, string, string>`.
+Hinweis: Der Kommentar `// string -> string -> string` beschreibt die Typsignatur der darunterstehenden Funktion. Da F# eine bessere Typinferenz als C# hat, muss man meist die Typen nicht explizit angeben. Für diesen Artikel habe ich an manchen Stellen die Signatur als Kommentar hinzugefügt um Unklarheiten zu vermeiden. Der letzte Typ in der Signatur ist der Rückgabetyp der Funktion. Alle anderen Werte sind Parameter der Funktion. Der Rückgabewert der Funktion ist der Wert des letztens Ausdrucks - wobei es hier in der Funktion nur einen Ausdruck gibt. In C# wäre die entsprechende Signatur "`Func<string, string, string>`".
 
-Da es sich beim Vor- und Nachnamen um einen `string` handelt, besteht eine gewisse Verwechslungsgefahr beim Aufruf der Funktion `formatName` mit zwei Parametern `"Simpson"` und `"Homer"`:
+Da es sich beim Vor- und Nachnamen um einen `string` handelt, besteht eine gewisse Verwechslungsgefahr beim Aufruf der Funktion `formatName` mit zwei Parametern:
 
 ```fsharp
 // Achtung: Vor- und Nachname sind vertauscht:
@@ -277,11 +277,17 @@ let tryCreatePerson fn ln un =
             }
 ```
 
+## TODO
+
+In der "Funktionalen Programmierung" (FP) versucht man meist Daten und Funktionen strikt zu trennen. Dies steht im Gegensatz zur "Objektorientierten Programmierung" (OOP), in der Objekte (z.B. "Klassen") Verhalten (z.B. "Methoden") haben sollten. Reine Datenobjekte ("DTOs") sind in der OOP-Welt verpönt.
+
+Dieser Ansatz ist eine Ergänzung zu reinen FP-Strategien wie "Applicative Validation".
+
 ## Fazit
 
-Um sicherzustellen, dass vermeintlich einfache Typen (wie `string`) im Domänenkontext Sinn ergeben ("Optionaler Vorname", "UserName mit Regeln"), bietet es sich an, dedizierte Typen zu erstellen. 
+Um sicherzustellen, dass vermeintlich einfache Typen (wie `string`) im Domänenkontext Sinn ergeben ("Optionaler Vor- und Nachname", "UserName mit Regeln"), bietet es sich an, dedizierte Typen zu erstellen. 
 
-Das "Smart Constructor" Pattern erleichtert die Validierung einfacher Typen, indem das Erstellen ungültiger Typen unterbunden wird (Stichwort: ["Prevent inpossible states (oder wie das heisst TODO Better link"](https://sporto.github.io/elm-patterns/basic/impossible-states.html)).))
+Das "Smart Constructor" Pattern erleichtert die Validierung einfacher Typen, indem das Erstellen ungültiger Typen unterbunden wird (["Make impossible states impossible"](https://sporto.github.io/elm-patterns/basic/impossible-states.html)). Im obigen Beispiel hätte man auch die Validierungslogik des `UserName`s direkt in die `tryCreatePerson` Funktion einbauen können. Benötigt man die gleiche Logik an mehreren Stellen (!), lohnt sich der Aufwand mit dem "Smart Constructor".
 
 Ich möchte hier auch hervorheben, dass das obiges Beispiel sehr kompakt und einfach ist.
 Es ist überschaubarer/wartbarer (["it fits in your head"](https://blog.ploeh.dk/2021/06/14/new-book-code-that-fits-in-your-head/)), als das Gegenstück in C#.
